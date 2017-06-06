@@ -7,8 +7,8 @@ import java.util.logging.Logger;
 import io.grpc.CompressorRegistry;
 import io.grpc.DecompressorRegistry;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
+import io.grpc.netty.NettyChannelBuilder;
 
 public class HelloWorldClient {
     private static final Logger logger = Logger.getLogger(HelloWorldClient.class.getName());
@@ -18,10 +18,15 @@ public class HelloWorldClient {
 
     /** Construct client connecting to HelloWorld server at {@code host:port}. */
     public HelloWorldClient(String host, int port) {
-        this(ManagedChannelBuilder.forAddress(host, port)
+        //  GRPC-java 1.3.0 doesn't _nicely_ support proxying RPCs
+        // you can set an environment variable that it'll pick up: https://github.com/grpc/grpc-java/blob/master/netty/src/main/java/io/grpc/netty/NettyChannelBuilder.java#L360
+        // However, they're planning to add it to the API: https://github.com/grpc/grpc-java/issues/2193
+        this(NettyChannelBuilder.forAddress(host, port)
                 // Channels are secure by default (via SSL/TLS). For the example we disable TLS to avoid
                 // needing certificates.
                 .usePlaintext(true)
+                // set SSL context for TLS
+                //.sslContext()
                 // default (de)compression instances leverage Gzip codec.
                 .compressorRegistry(CompressorRegistry.getDefaultInstance())
                 .decompressorRegistry(DecompressorRegistry.getDefaultInstance())
